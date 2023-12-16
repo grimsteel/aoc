@@ -1,79 +1,59 @@
-export function doRow(record: string[], check: number[]): number {
-  let count = 0;
-  let state = {
-    needNums: [...check],
-    numBroken: 0,
-    cPos: 0,
-    record
-  };
+import { memoize, sum, toNumList } from "../utils.ts";
 
-  const decisions: (typeof state)[] = [];
+const doRow = memoize((record: string, check: number[]): number => {
+  // Check to see if there are enough spaces to fit the check
+  // Note: there are check.length - 1 spaces between the numbers
+  if (record.length < sum(check) + check.length - 1) return 0;
 
-  while (true) {
-    let goBack = false;
+  if (check.length === 0) {
+    // If there are more "#"s in the record but no checks left, not possible
+    if (record.indexOf("#") !== -1) return 0;
+    // Otherwise, it's possible
+    return 1;
+  }
 
-    if (state.record[state.cPos] === "?") {
-      state.record[state.cPos] = "#";
-      decisions.push(structuredClone(state));
-    }
-    
-    switch (state.record[state.cPos]) {
-      case ".":
-        if (state.numBroken > 0) {
-          if (state.numBroken !== state.needNums[0]) {
-            goBack = true;
-          } else {
-            state.needNums.shift();
-            state.numBroken = 0;
-          }
-        }
-        break;
-      case "#":
-        state.numBroken++;
-        if (state.numBroken > state.needNums[0]) {
-          goBack = true;
-        }
-        break;
-    }
+  // If there first char is a ".", then we can just skip it
+  if (record[0] === ".") {
+    return doRow(record.slice(1), check);
+  }
 
-    // At the end
-    if (state.cPos === state.record.length - 1) {
-      // Handle any things that need to end now
-      if (state.numBroken === state.needNums[0]) {
-        state.needNums.shift();
-        state.numBroken = 0;
-      }
-      if (state.needNums.length === 0 && state.numBroken === 0) {
-        count++;
-      }
-      goBack = true;
-    }
-    
-    if (goBack) {
-      // There's a conflict. Go back to the last decision point
-      const lastDecision = decisions.pop()
-      if (!lastDecision) return count; 
-      state = lastDecision;
-      // Now we need to change the current pos thing to a "."
-      state.record[state.cPos] = ".";
+  // If it's "#", see if we can fit it.
+  // If the next check is of length 3, basically match it on a regex of /^[#\?]{3}[\?\.$]/, because ?s can function as a # or a  (the end of the string also works as a boundary)
+  if (record[0] === "#") {
+    const regex = new RegExp(`^[#\?]{${check[0]}}($|[\?\.])`);
+    // If we can't match it, not possible
+    if (!record.match(regex)) {
+      return 0;
     } else {
-      state.cPos++;
+      return doRow(record.slice(check[0] + 1), check.slice(1));
     }
   }
-}
+
+  // If it's a "?", just try both
+  return doRow("#" + record.slice(1), check) + doRow("." + record.slice(1), check);
+});
 
 function one(input: string[]): number {
   const rows = input.map(el => {
     const [record, check] = el.split(" ");
-    const parsedCheck = check.split(",").map(el => parseInt(el));
-    return doRow(record.split(""), parsedCheck);
+    return doRow(record, toNumList(check));
   });
 
-  return rows.reduce((acc, cur) => cur + acc, 0);
+  return sum(rows);
+}
+
+function two(input: string[]): number {
+  const rows = input.map(el => {
+    const [record, check] = el.split(" ");
+    const parsedCheck = toNumList(check);
+    return doRow([record, record, record, record, record].join("?"), parsedCheck.concat(parsedCheck).concat(parsedCheck).concat(parsedCheck).concat(parsedCheck));
+  });
+
+  return sum(rows)
 }
 
 export default {
-  one, 
+  one, two,
   sample: `???.### 1,1,3
 .??..??...?##. 1,1,3
 ?#?#?#?#?#?#?#? 1,3,1,6

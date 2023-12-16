@@ -3,3 +3,4 @@ lock.json
 .replit
 replit.nix
 .cache/
+.vscode/

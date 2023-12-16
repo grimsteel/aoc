@@ -6,22 +6,20 @@ import { fetchDayInput, fetchDay, submitDay } from "./fetch-day.ts";
 type DayExports = {
   one: (input: string[]) => number,
   two?: (input: string[]) => number,
-  sample: string
+  sample: string,
+  dontSplit?: boolean
 };
 
 console.log(colors.brightGreen.bold("AOC Playground:\n"));
 
 async function exec() {
-  const daysSupported = [];
-  
-  
-  
+  const daysSupported: string[] = [];
+    
   for await (const file of walk("./days")) {
     if (!file.isFile) continue;
     const [dayId] = file.name.split(".");
     daysSupported.push(dayId);
   }
-  
   
   
   const selectedDay = await Select.prompt({
@@ -50,8 +48,9 @@ async function exec() {
     message: "Pick input type",
     default: false
   });
-  
-  const input = (inputType ? await fetchDayInput(selectedDay) : selectedDayExports.sample).split(/\r?\n/);
+
+  const rawInput = inputType ? await fetchDayInput(selectedDay) : selectedDayExports.sample;
+  const input = selectedDayExports.dontSplit ? [rawInput] : rawInput.split(/\r?\n/);
   
   console.log(partToRun(input));
 }
