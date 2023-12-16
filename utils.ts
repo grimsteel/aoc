@@ -18,3 +18,7 @@ export function memoize<T extends unknown[], R>(fn: (...args: T) => R): (...args
 export function toNumList(input: string, sep = ","): number[] {
   return input.split(sep).map(el => parseInt(el));
 }
+
+export function transpose(arr: string[]) {
+  return Array(arr[0].length).fill(0).map((_, i) => arr.map(el => el[i]).join(""));
+}
