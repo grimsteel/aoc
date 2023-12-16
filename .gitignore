@@ -1,0 +1,5 @@
+.deno/
+lock.json
+.replit
+replit.nix
+.cache/
