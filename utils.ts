@@ -22,3 +22,7 @@ export function toNumList(input: string, sep = ","): number[] {
 export function transpose(arr: string[]) {
   return Array(arr[0].length).fill(0).map((_, i) => arr.map(el => el[i]).join(""));
 }
+
+export function rotateRight<T>(arr: T[][]) {
+  return Array(arr[0].length).fill(0).map((_, i) => arr.toReversed().map(el => el[i]));
+}
